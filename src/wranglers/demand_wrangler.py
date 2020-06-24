@@ -1,29 +1,33 @@
-import pandas as pd
-import os
-import numpy as np
 import datetime
+import numpy as np
+import pandas as pd
 
 
+# import os
 # os.chdir(os.getcwd()+'/src/wranglers')
 # df = pd.read_excel('../../data/full_demand.xlsx', header=1)
 
 class DemandWrangler:
     def __init__(self, path_to_file):
         self.path_to_file = path_to_file
+        print('Reading demand data...')
         self.demand = pd.read_excel(path_to_file, header=1)
         self.sap_catalogue = pd.DataFrame()
 
     def wrangle(self):
+        print('Wrangling demand data...')
         # Drop the total columns
         self.demand.drop(columns=[str(col) for col in self.demand.columns if str(col).find('Total') != -1], axis=1,
                          inplace=True)
-        # Pandas friendly column names
+
         # In the .xlsx files 0 is marked as '-' which causes the demand columns to be read as of type object (str).
-        # We need to replace the '-' by 0 in the demand columns and transform the type to int so that we can aggregate using sum().
+        # We need to replace the '-' by '0', and the ',' by '' in the demand columns and transform the type to int so
+        # that we can aggregate using sum().
         dates_columns = [col for col in self.demand.columns if isinstance(col, datetime.datetime)]
         self.demand.loc[:, dates_columns] = self.demand.loc[:, dates_columns].replace(to_replace='-', value='0')
         self.demand.loc[:, dates_columns] = self.demand.loc[:, dates_columns].replace(to_replace=',', value='')
         self.demand.loc[:, dates_columns] = self.demand.loc[:, dates_columns].astype(int)
+
         # For the non-demand columns we replace '-' by np.nan
         self.demand.replace(to_replace='-', value=np.nan, inplace=True)
 
@@ -59,8 +63,10 @@ class DemandWrangler:
         self.demand.columns = [col.lower().strip().replace(' ', '_') for col in self.demand.columns]
 
     def get_sap_catalogue(self):
+        print('Getting SAP Catalogue...')
         self.wrangle()
-        # We agregate using brand, item_description and sub_category, then we keep the hierarchy rows that have the most recent sales and sum the demand.
+        # We agregate using brand, item_description and sub_category, then we keep the hierarchy rows that have the
+        # most recent sales and sum the demand.
         self.sap_catalogue = self.demand[self.demand['demand'] > 0].sort_values(
             ascending=False,
             by=['item_description', 'date', 'demand']).drop(
@@ -69,8 +75,7 @@ class DemandWrangler:
         self.sap_catalogue.reset_index(drop=True, inplace=True)
         return self.sap_catalogue
 
+
 if __name__ == '__main__':
     demand_wrangler = DemandWrangler('../../data/full_demand.xlsx')
     print(demand_wrangler.get_sap_catalogue())
-
-
