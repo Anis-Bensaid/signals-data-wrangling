@@ -11,6 +11,7 @@ PATH_TO_BRANDS_MAPPING = '../../data/elc_brands.csv'
 # os.chdir(os.getcwd()+'/src/wranglers')
 # df = pd.read_excel('../../data/full_demand.xlsx', header=1)
 
+
 class DemandWrangler:
     def __init__(self, path_to_file):
         self.path_to_file = path_to_file
@@ -71,7 +72,7 @@ class DemandWrangler:
         self.demand['Date'] = pd.to_datetime(self.demand['Date'], errors='coerce').dt.to_period('m')
 
         # Code friendly column names
-        self.demand.columns = [col.lower().strip().replace(' ', '_') for col in self.demand.columns]
+        self.demand.columns = [col.strip().replace(' ', '_') for col in self.demand.columns]
 
         self.is_wrangled = True
 
@@ -80,59 +81,59 @@ class DemandWrangler:
         print('Getting SAP Catalogue...')
         # We agregate using brand, item_description and sub_category, then we keep the hierarchy rows that have the
         # most recent sales and sum the demand.
-        self.sap_catalogue = self.demand[self.demand['demand'] > 0].sort_values(
+        self.sap_catalogue = self.demand[self.demand['Demand'] > 0].sort_values(
             ascending=False,
-            by=['item_description', 'date', 'demand']).drop(
-            columns=['date', 'demand']).dropna().drop_duplicates(
-            subset=['brand', 'item_description', 'sub_category_id'], keep='first')
+            by=['Item_Description', 'Date', 'Demand']).drop(
+            columns=['Date', 'Demand']).dropna().drop_duplicates(
+            subset=['Brand', 'Item_Description', 'Sub_Category_ID'], keep='first')
 
         # The category and subcategories are truncated in the demand data so we remap them using mapping files
         # We also map the brand IDs to the brand names using a mapping file.
         sap_sub_categories = pd.read_csv(PATH_TO_SUBCATEGORIES_MAPPING, encoding="ISO-8859-1")
-        sap_sub_categories['sub_category_id'] = sap_sub_categories['sub_category_id'].astype(str)
-        self.sap_catalogue = self.sap_catalogue.drop(columns=['sub_category']).merge(sap_sub_categories,
-                                                                                     on='sub_category_id',
+        sap_sub_categories['Sub_Category_ID'] = sap_sub_categories['Sub_Category_ID'].astype(str)
+        self.sap_catalogue = self.sap_catalogue.drop(columns=['Sub_Category']).merge(sap_sub_categories,
+                                                                                     on='Sub_Category_ID',
                                                                                      how='left')
-        if not self.sap_catalogue[self.sap_catalogue['sub_category'].isna()].empty:
+        if not self.sap_catalogue[self.sap_catalogue['Sub_Category'].isna()].empty:
             print('The following Subcategory IDs are not mapped, please add them to the mapping file:')
-            print(self.sap_catalogue[self.sap_catalogue['sub_category'].isna()]['sub_category_id'].unique().tolist())
+            print(self.sap_catalogue[self.sap_catalogue['Sub_Category'].isna()]['Sub_Category_ID'].unique().tolist())
 
         sap_categories = pd.read_csv(PATH_TO_CATEGORIES_MAPPING, encoding="ISO-8859-1")
-        sap_categories['category_id'] = sap_categories['category_id'].astype(str)
-        self.sap_catalogue = self.sap_catalogue.drop(columns=['category']).merge(sap_categories,
-                                                                                 on='category_id',
+        sap_categories['Category_ID'] = sap_categories['Category_ID'].astype(str)
+        self.sap_catalogue = self.sap_catalogue.drop(columns=['Category']).merge(sap_categories,
+                                                                                 on='Category_ID',
                                                                                  how='left')
-        if not self.sap_catalogue[self.sap_catalogue['category'].isna()].empty:
+        if not self.sap_catalogue[self.sap_catalogue['Category'].isna()].empty:
             print('The following Category IDs are not mapped, please add them to the mapping file:')
-            print(self.sap_catalogue[self.sap_catalogue['category'].isna()]['category_id'].unique().tolist())
+            print(self.sap_catalogue[self.sap_catalogue['Category'].isna()]['Category_ID'].unique().tolist())
 
         sap_brands = pd.read_csv(PATH_TO_BRANDS_MAPPING, encoding="ISO-8859-1")
-        sap_brands['brand_id'] = sap_brands['brand_id'].astype(str)
-        self.sap_catalogue.rename(columns={'brand': 'brand_id'}, inplace=True)
+        sap_brands['Brand_ID'] = sap_brands['Brand_ID'].astype(str)
+        self.sap_catalogue.rename(columns={'Brand': 'Brand_ID'}, inplace=True)
         self.sap_catalogue = self.sap_catalogue.merge(sap_brands,
-                                                      on='brand_id',
+                                                      on='Brand_ID',
                                                       how='left')
-        if not self.sap_catalogue[self.sap_catalogue['elc_brand'].isna()].empty:
+        if not self.sap_catalogue[self.sap_catalogue['ELC_Brand'].isna()].empty:
             print('The following Brand IDs are not mapped, please add them to the mapping file:')
-            print(self.sap_catalogue[self.sap_catalogue['elc_brand'].isna()]['brand_id'].unique().tolist())
+            print(self.sap_catalogue[self.sap_catalogue['ELC_Brand'].isna()]['Brand_ID'].unique().tolist())
 
         # Drop missing columns
         self.sap_catalogue.dropna(inplace=True)
 
         # Ordering columns and rows
         ordered_columns = [
-            'brand_id',
-            'elc_brand',
-            'itemid_4',
-            'item_description',
-            'major_category_id',
-            'major_category',
-            'application_id',
-            'application',
-            'category_id',
-            'category',
-            'sub_category_id',
-            'sub_category']
+            'Brand_ID',
+            'ELC_Brand',
+            'ItemID_4',
+            'Item_Description',
+            'Major_Category_ID',
+            'Major_Category',
+            'Application_ID',
+            'Application',
+            'Category_ID',
+            'Category',
+            'Sub_Category_ID',
+            'Sub_Category']
         self.sap_catalogue = self.sap_catalogue.set_index(ordered_columns).reset_index()
         return self.sap_catalogue
 
@@ -141,4 +142,4 @@ if __name__ == '__main__':
     demand_wrangler = DemandWrangler('../../data/full_demand.xlsx')
     sap_catalogue = demand_wrangler.get_sap_catalogue()
     demand = demand_wrangler.demand
-    # sap_catalogue[sap_catalogue['elc_brand'].isna()]['brand_id'].unique()
+    # sap_catalogue[sap_catalogue['ELC_Brand'].isna()]['Brand_ID'].unique()

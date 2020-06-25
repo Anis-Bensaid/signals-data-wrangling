@@ -8,10 +8,10 @@ def brands_custom_distance(row):
     Calculates a distance score between two sentences. In this case elc_brand and brand. The score is between 0 and 1, 1 being a good match.
     """
     # jaccard = textdistance.jaccard(str(row['brand']).lower().replace('.','').replace('&','and'), str(row['elc_brand']).lower().replace('.','').replace('é','e'))
-    jaro = textdistance.jaro_winkler(str(row['brand']).lower().replace('.', '').replace('&', 'and'),
-                                     str(row['elc_brand']).lower().replace('.', '').replace('é', 'e'))
-    fuzzi = fuzz.partial_ratio(str(row['brand']).lower().replace('.', '').replace('&', 'and'),
-                               str(row['elc_brand']).lower().replace('.', '').replace('é', 'e')) / 100
+    jaro = textdistance.jaro_winkler(str(row['Brand']).lower().replace('.', '').replace('&', 'and'),
+                                     str(row['ELC_Brand']).lower().replace('.', '').replace('é', 'e'))
+    fuzzi = fuzz.partial_ratio(str(row['Brand']).lower().replace('.', '').replace('&', 'and'),
+                               str(row['ELC_Brand']).lower().replace('.', '').replace('é', 'e')) / 100
     return np.average([fuzzi, jaro], weights=[0.4, 0.6])
 
 
