@@ -1,13 +1,14 @@
 import pandas as pd
 import json
 
-class RatingsReviewsWrangler():
+class RatingsReviewsWrangler:
     def __init__(self, path_to_file):
         self.path_to_file = path_to_file
         self.reviews = pd.read_csv(path_to_file, low_memory=False)
         self.is_wrangled = False
 
     def wrangle(self):
+        print('Wrangling Ratings and Reviews data...')
         with open('../../data/reviews_template_mapping.txt') as f:
             columns_mapping = json.load(f)
         self.reviews.rename(columns=columns_mapping, inplace=True)

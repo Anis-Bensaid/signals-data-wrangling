@@ -11,16 +11,16 @@ import pandas as pd
 class DemandWrangler:
     def __init__(self, path_to_file):
         self.path_to_file = path_to_file
-        print('Reading demand data...')
-        # self.demand = pd.read_excel(path_to_file, header=1)
-        self.demand = df
+        print('Reading Demand data...')
+        self.demand = pd.read_excel(path_to_file, header=1)
+        # self.demand = df
         self.sap_catalogue = pd.DataFrame()
         self.is_wrangled = False
 
     def wrangle(self):
         if self.is_wrangled:
             return
-        print('Wrangling demand data...')
+        print('Wrangling Demand data...')
         # Drop the total columns
         self.demand.drop(columns=[str(col) for col in self.demand.columns if str(col).find('Total') != -1], axis=1,
                          inplace=True)
