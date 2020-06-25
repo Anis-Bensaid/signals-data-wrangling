@@ -1,18 +1,22 @@
 import pandas as pd
 import json
 
+PATH_TO_REVIEWS_TEMPLATE = '../../data/reviews_template.csv'
+PATH_TO_REVIEWS_TEMPLATE_MAPPING = '../../data/reviews_template_mapping.txt'
+
+
 class RatingsReviewsWrangler:
     def __init__(self, path_to_file):
         self.path_to_file = path_to_file
         self.reviews = pd.read_csv(path_to_file, low_memory=False)
         self.is_wrangled = False
 
-    def wrangle(self):
+    def map_to_template(self):
         print('Wrangling Ratings and Reviews data...')
-        with open('../../data/reviews_template_mapping.txt') as f:
+        with open(PATH_TO_REVIEWS_TEMPLATE_MAPPING) as f:
             columns_mapping = json.load(f)
         self.reviews.rename(columns=columns_mapping, inplace=True)
-        template = pd.read_csv('../../data/reviews_template.csv')
+        template = pd.read_csv(PATH_TO_REVIEWS_TEMPLATE)
         columns_not_mapped = [col for col in self.reviews.columns if not col in template.columns]
         columns_not_filled = [col for col in template.columns if not col in self.reviews.columns]
         if columns_not_mapped:
@@ -32,13 +36,13 @@ class RatingsReviewsWrangler:
         if len(self.reviews) <= max_rows:
             self.reviews.to_csv(self.path_to_file.replace('.csv', '_to_upload.csv'), index=False)
         else:
-            for k in range(1, len(self.reviews)//max_rows+2):
-                self.reviews.iloc[(k-1)*max_rows:k*max_rows, :].to_csv(
-                    self.path_to_file.replace('.csv', '_to_upload_'+str(k)+'.csv'), index=False)
+            for k in range(1, len(self.reviews) // max_rows + 2):
+                self.reviews.iloc[(k - 1) * max_rows:k * max_rows, :].to_csv(
+                    self.path_to_file.replace('.csv', '_to_upload_' + str(k) + '.csv'), index=False)
+
 
 if __name__ == '__main__':
     reviews_wrangler = RatingsReviewsWrangler('../../data/cosmetics_reviews_20200331.csv')
-    reviews_wrangler.wrangle()
+    reviews_wrangler.map_to_template()
     reviews = reviews_wrangler.reviews
     reviews_wrangler.split_and_save(max_rows=100000)
-
