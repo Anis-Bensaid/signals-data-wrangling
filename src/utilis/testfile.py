@@ -1,3 +1,0 @@
-def printtest():
-    print('hello')
-
