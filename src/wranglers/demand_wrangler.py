@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 
 
+PATH_TO_CATEGORIES_MAPPING = '../../data/elc_categories.csv'
+PATH_TO_SUBCATEGORIES_MAPPING = '../../data/elc_sub_categories.csv'
+PATH_TO_BRANDS_MAPPING = '../../data/elc_brands.csv'
 #
 # import os
 # os.chdir(os.getcwd()+'/src/wranglers')
@@ -85,7 +88,7 @@ class DemandWrangler:
 
         # The category and subcategories are truncated in the demand data so we remap them using mapping files
         # We also map the brand IDs to the brand names using a mapping file.
-        sap_sub_categories = pd.read_csv('../../data/elc_sub_categories.csv', encoding="ISO-8859-1")
+        sap_sub_categories = pd.read_csv(PATH_TO_SUBCATEGORIES_MAPPING, encoding="ISO-8859-1")
         sap_sub_categories['sub_category_id'] = sap_sub_categories['sub_category_id'].astype(str)
         self.sap_catalogue = self.sap_catalogue.drop(columns=['sub_category']).merge(sap_sub_categories,
                                                                                      on='sub_category_id',
@@ -94,7 +97,7 @@ class DemandWrangler:
             print('The following Subcategory IDs are not mapped, please add them to the mapping file:')
             print(self.sap_catalogue[self.sap_catalogue['sub_category'].isna()]['sub_category_id'].unique().tolist())
 
-        sap_categories = pd.read_csv('../../data/elc_categories.csv', encoding="ISO-8859-1")
+        sap_categories = pd.read_csv(PATH_TO_CATEGORIES_MAPPING, encoding="ISO-8859-1")
         sap_categories['category_id'] = sap_categories['category_id'].astype(str)
         self.sap_catalogue = self.sap_catalogue.drop(columns=['category']).merge(sap_categories,
                                                                                  on='category_id',
@@ -103,7 +106,7 @@ class DemandWrangler:
             print('The following Category IDs are not mapped, please add them to the mapping file:')
             print(self.sap_catalogue[self.sap_catalogue['category'].isna()]['category_id'].unique().tolist())
 
-        sap_brands = pd.read_csv('../../data/elc_brands.csv', encoding="ISO-8859-1")
+        sap_brands = pd.read_csv(PATH_TO_BRANDS_MAPPING, encoding="ISO-8859-1")
         sap_brands['brand_id'] = sap_brands['brand_id'].astype(str)
         self.sap_catalogue.rename(columns={'brand': 'brand_id'}, inplace=True)
         self.sap_catalogue = self.sap_catalogue.merge(sap_brands,
