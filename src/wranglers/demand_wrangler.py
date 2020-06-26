@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 
 
-PATH_TO_CATEGORIES_MAPPING = '../../data/elc_categories.csv'
-PATH_TO_SUBCATEGORIES_MAPPING = '../../data/elc_sub_categories.csv'
-PATH_TO_BRANDS_MAPPING = '../../data/elc_brands.csv'
+PATH_TO_CATEGORIES_MAPPING = '../data/elc_categories.csv'
+PATH_TO_SUBCATEGORIES_MAPPING = '../data/elc_sub_categories.csv'
+PATH_TO_BRANDS_MAPPING = '../data/elc_brands.csv'
 #
 # import os
 # os.chdir(os.getcwd()+'/src/wranglers')
