@@ -178,14 +178,6 @@ class MultiProductsCatalogueWrangler:
             products_wrangler.export_voc_files()
 
 
-if __name__ == '__main__':
-    demand_wrangler = DemandWrangler('../data/full_demand.xlsx')
-    sap_catalogue = demand_wrangler.get_sap_catalogue()
-    products_wrangler = ProductsCatalogueWrangler('../data/Cosmetics_Product_20200116.csv',
-                                                  sap_catalogue)
-    products_wrangler.get_voc_files()
-    products = products_wrangler.products
-
 # columns_mapping = {
 #     'Product_ID': 'Product_Id',
 #     'Source Product Identifier': 'Source_Product_Identifier',
