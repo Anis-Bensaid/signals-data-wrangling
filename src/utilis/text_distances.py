@@ -28,7 +28,7 @@ def item_description_custom_distance(row):
         fuzzi = fuzz.partial_ratio(str(row['Product']).lower(), str(row['Item_Description']).lower()) / 100
     except ValueError:
         return jaro
-    return np.average([fuzzi, jaro], weights=[0.45, 0.55])
+    return np.average([fuzzi, jaro], weights=[0.5, 0.5])
 
 
 def subcategory_custom_distance(row):
