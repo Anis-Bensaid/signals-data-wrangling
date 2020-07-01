@@ -22,10 +22,9 @@ def item_description_custom_distance(row):
     """
     Calculates a distance score between two sentences. In this case elc_brand and brand. The score is between 0 and 1, 1 being a good match.
     """
-    # jaccard = textdistance.jaccard(str(row['brand']).lower().replace('.','').replace('&','and'), str(row['elc_brand']).lower().replace('.','').replace('é','e'))
     item_description = str(row['item_description']).lower().replace('clinique', '').replace('origins', '').replace(
         'tom ford', '').replace('la mer', '').replace('estee lauder', '').replace('mac', '').replace('bb', '').replace(
-        'bobbi', '').replace('brown','')
+        'bobbi', '').replace('brown', '')
     product = str(row['product']).lower()
     jaro = textdistance.jaro_winkler(item_description, product)
     try:
