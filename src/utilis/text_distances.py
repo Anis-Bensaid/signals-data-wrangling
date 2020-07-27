@@ -22,10 +22,10 @@ def item_description_custom_distance(row):
     """
     Calculates a distance score between two sentences. In this case elc_brand and brand. The score is between 0 and 1, 1 being a good match.
     """
-    item_description = str(row['item_description']).lower().replace('clinique', '').replace('origins', '').replace(
+    item_description = str(row['Item_Description']).lower().replace('clinique', '').replace('origins', '').replace(
         'tom ford', '').replace('la mer', '').replace('estee lauder', '').replace('mac', '').replace('bb', '').replace(
         'bobbi', '').replace('brown', '')
-    product = str(row['product']).lower()
+    product = str(row['Product']).lower()
     jaro = textdistance.jaro_winkler(item_description, product)
     try:
         fuzzi = fuzz.partial_ratio(item_description, product) / 100
@@ -36,13 +36,16 @@ def item_description_custom_distance(row):
 
 def subcategory_custom_distance(row):
     """
-    Calculates a distance score between two sentences. In this case elc_brand and brand. The score is between 0 and 1, 1 being a good match.
+    Calculates a distance score between two sentences. In this case elc_brand and brand. The score is between 0 and 1,
+    1 being a good match.
     """
     jaro = textdistance.jaro_winkler(str(row['Sub_Category']).lower(),
+                                     str(row['ELC_solution_type']).lower() + ' ' +
                                      str(row['Item_Description']).lower().replace('.', '').replace('&', 'and'))
     try:
-        fuzzi = fuzz.partial_ratio(str(row['Item_Description']).lower().replace('.', '').replace('&', 'and'),
-                                   str(row['Sub_Category'])) / 100
+        fuzzi = fuzz.partial_ratio(str(row['Sub_Category']).lower(),
+                                   str(row['ELC_solution_type']).lower() + ' ' +
+                                   str(row['Item_Description']).lower().replace('.', '').replace('&', 'and')) / 100
     except ValueError:
         return jaro
     return np.average([fuzzi, jaro], weights=[0.5, 0.5])
