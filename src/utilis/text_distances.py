@@ -40,12 +40,12 @@ def subcategory_custom_distance(row):
     1 being a good match.
     """
     jaro = textdistance.jaro_winkler(str(row['Sub_Category']).lower(),
-                                     str(row['ELC_solution_type']).lower() + ' ' +
+                                     str(row['ELC_Solution_Type']).lower() + ' ' +
                                      str(row['Item_Description']).lower().replace('.', '').replace('&', 'and'))
     try:
         fuzzi = fuzz.partial_ratio(str(row['Sub_Category']).lower(),
-                                   str(row['ELC_solution_type']).lower() + ' ' +
+                                   str(row['ELC_Solution_Type']).lower() + ' ' +
                                    str(row['Item_Description']).lower().replace('.', '').replace('&', 'and')) / 100
     except ValueError:
         return jaro
-    return np.average([fuzzi, jaro], weights=[0.5, 0.5])
+    return np.average([fuzzi, jaro], weights=[0.95, 0.05])

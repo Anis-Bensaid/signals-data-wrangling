@@ -9,13 +9,14 @@ import json
 from wranglers.demand_wrangler import DemandWrangler
 from utilis.text_distances import *
 from tqdm import tqdm
-tqdm.pandas()
 
+tqdm.pandas()
 
 PATH_TO_ITEM_DESCRIPTIONS_MAPPING = '../data/item_description_mapping.csv'
 PATH_TO_BRANDS_MAPPING = '../data/brand_mapping.csv'
 PATH_TO_PRODUCT_CATALOGUE_TEMPLATE_MAPPING = '../data/product_catalogue_template_mapping.txt'
 PATH_TO_PRODUCT_CATALOGUE_TEMPLATE = '../data/product_catalogue_template.csv'
+
 
 class ProductsCatalogueWrangler:
     def __init__(self, path_to_products_catalogue, path_to_save_dir, sap_catalogue):
@@ -43,7 +44,6 @@ class ProductsCatalogueWrangler:
                   'properly mapped, otherwise they will be filled with missing data:')
             print(columns_not_filled)
         self.products = pd.concat([template, self.products], ignore_index=True, join='outer')
-        print('1', len(self.products))
 
     def map_brands(self, threshold=0.815, path_to_brand_mapping=PATH_TO_BRANDS_MAPPING):
         print('Mapping Brands...')
@@ -74,7 +74,7 @@ class ProductsCatalogueWrangler:
             brands_mapping.to_csv(path_to_brand_mapping, index=False)
 
         self.products = self.products.merge(brands_mapping, how='left')
-        print('2', len(self.products))
+
     def map_item_descriptions(self, threshold=0.637,
                               path_to_item_description_mapping=PATH_TO_ITEM_DESCRIPTIONS_MAPPING):
         print('Mapping Item Descriptions...')
@@ -104,22 +104,21 @@ class ProductsCatalogueWrangler:
 
         self.products = self.products.merge(item_descriptions_mapping, on=['Brand_ID', 'Product'], how='left')
         self.products.loc[self.products['Product_Score'] < threshold, ['Item_Description', 'Product_Score']] = np.nan, 0
-        print('3', len(self.products))
+
     def map_sap_hierarchy(self):
         print('Mapping subcategories and adding SAP hierarchy...')
         self.products = self.products.merge(self.sap_catalogue, on=['Brand_ID', 'ELC_Brand', 'Item_Description'],
                                             how='left')
-        print('4a', len(self.products))
 
         self.products['Sub_Category_Score'] = self.products.progress_apply(
             lambda row: subcategory_custom_distance(row), axis=1)
-        print('4b', len(self.products))
         self.products['Brand_ID'].fillna('Non-ELC', inplace=True)
         self.products['Product'].fillna('Unmapped', inplace=True)
+        self.products.sort_values(by=['Collection_Date'], ascending=False, inplace=True)
         self.products = self.products.groupby(['Channel', 'Source_Product_Identifier', 'Brand_ID', 'Product']
                                               ).progress_apply(
             lambda x: x.nlargest(1, 'Sub_Category_Score')).reset_index(drop=True)
-        print('4c', len(self.products))
+
     def wrangle(self, save=True):
         print('Reading Product Catalogue data...')
         self.products = pd.read_csv(self.path_to_products_catalogue)
@@ -137,30 +136,31 @@ class ProductsCatalogueWrangler:
                 index=False)
         self.is_wrangled = True
         self.is_voc = False
-        print('5', len(self.products))
+
     def export_voc_files(self):
         if not self.is_wrangled:
             self.wrangle()
-        self.products.loc[~self.products['Brand_ID'].isna(), 'Brand'] = self.products.loc[
-            ~self.products['Brand_ID'].isna(), 'ELC_Brand']
+        self.products.loc[self.products['Brand_ID'] != 'Non-ELC', 'Brand'] = self.products.loc[
+            self.products['Brand_ID'] != 'Non-ELC', 'ELC_Brand']
         self.products.loc[~self.products['Sub_Category'].isna(), 'ELC_Solution_Type'] = self.products.loc[
             ~self.products['Sub_Category'].isna(), 'Sub_Category']
-        self.products.loc[~self.products['Item_Description'].isna(), 'Product'] = self.products.loc[
-            ~self.products['Item_Description'].isna(), 'Item_Description']
+        self.products.loc[self.products['Item_Description'] != 'Unmapped', 'Product'] = self.products.loc[
+            self.products['Item_Description'] != 'Unmapped', 'Item_Description']
         template = pd.read_csv(PATH_TO_PRODUCT_CATALOGUE_TEMPLATE)
         self.products = self.products[template.columns]
         self.is_wrangled = False
         self.is_voc = True
         self.split_and_save()
-        print('6', len(self.products))
-    def split_and_save(self, max_rows=199999):
-        print('Splitting and saving VoC files...')
+
+    def split_and_save(self, max_rows=99999):
         if len(self.products) <= max_rows:
+            print('Saving VoC file...')
             self.products.to_csv(
                 os.path.join(self.path_to_save_dir,
                              ntpath.basename(self.path_to_products_catalogue).replace('.csv', '_to_upload.csv')),
                 index=False)
         else:
+            print('Splitting and saving VoC files...')
             for k in range(1, len(self.products) // max_rows + 2):
                 self.products.iloc[(k - 1) * max_rows:k * max_rows, :].to_csv(
                     os.path.join(self.path_to_save_dir,
@@ -168,7 +168,7 @@ class ProductsCatalogueWrangler:
                                      '.csv',
                                      '_to_upload_{}.csv'.format(k))),
                     index=False)
-        print('7', len(self.products))
+
 
 class MultiProductsCatalogueWrangler:
     def __init__(self, paths_to_products_catalogues, path_to_demand, path_to_save_dir):
@@ -183,7 +183,6 @@ class MultiProductsCatalogueWrangler:
             print('\nProcessing file ', ntpath.basename(path), '...')
             products_wrangler = ProductsCatalogueWrangler(path, self.path_to_save_dir, self.sap_catalogue)
             products_wrangler.export_voc_files()
-
 
 # columns_mapping = {
 #     'Product_ID': 'Product_Id',
